@@ -41,7 +41,7 @@ class Request extends Message implements MessageInterface, RequestInterface
      *
      * @var URI
      */
-    protected $uri;
+    public $uri;
 
     /**
      * Constructor.
