@@ -19,7 +19,7 @@ use InvalidArgumentException;
 /**
  * A lightweight HTTP client for sending synchronous HTTP requests via cURL.
  */
-class CURLRequest extends OutgoingRequest
+class CURLRequest extends Request
 {
     /**
      * The response object associated with this request
@@ -79,16 +79,20 @@ class CURLRequest extends OutgoingRequest
 
     /**
      * The default options from the constructor. Applied to all requests.
+     *
+     * @var array
      */
-    private array $defaultOptions;
+    private $defaultOptions;
 
     /**
      * Whether share options between requests or not.
      *
      * If true, all the options won't be reset between requests.
      * It may cause an error request with unnecessary headers.
+     *
+     * @var bool
      */
-    private bool $shareOptions;
+    private $shareOptions;
 
     /**
      * Takes an array of options to set the following possible class properties:
@@ -96,6 +100,8 @@ class CURLRequest extends OutgoingRequest
      *  - baseURI
      *  - timeout
      *  - any other request options to use as defaults.
+     *
+     * @param ResponseInterface $response
      */
     public function __construct(App $config, URI $uri, ?ResponseInterface $response = null, array $options = [])
     {
@@ -103,7 +109,7 @@ class CURLRequest extends OutgoingRequest
             throw HTTPException::forMissingCurl(); // @codeCoverageIgnore
         }
 
-        parent::__construct('GET', $uri);
+        parent::__construct($config);
 
         $this->response       = $response;
         $this->baseURI        = $uri->useRawQueryString();
@@ -148,9 +154,6 @@ class CURLRequest extends OutgoingRequest
         // Reset headers
         $this->headers   = [];
         $this->headerMap = [];
-
-        // Reset body
-        $this->body = null;
 
         // Reset configs
         $this->config = $this->defaultConfig;
@@ -291,11 +294,6 @@ class CURLRequest extends OutgoingRequest
             unset($options['delay']);
         }
 
-        if (array_key_exists('body', $options)) {
-            $this->setBody($options['body']);
-            unset($options['body']);
-        }
-
         foreach ($options as $key => $value) {
             $this->config[$key] = $value;
         }
@@ -315,13 +313,7 @@ class CURLRequest extends OutgoingRequest
         $uri = $this->baseURI->resolveRelativeURI($url);
 
         // Create the string instead of casting to prevent baseURL muddling
-        return URI::createURIString(
-            $uri->getScheme(),
-            $uri->getAuthority(),
-            $uri->getPath(),
-            $uri->getQuery(),
-            $uri->getFragment()
-        );
+        return URI::createURIString($uri->getScheme(), $uri->getAuthority(), $uri->getPath(), $uri->getQuery(), $uri->getFragment());
     }
 
     /**
@@ -366,7 +358,7 @@ class CURLRequest extends OutgoingRequest
 
         // Do we need to delay this request?
         if ($this->delay > 0) {
-            usleep((int) $this->delay * 1_000_000);
+            sleep($this->delay);
         }
 
         $output = $this->sendRequest($curlOptions);
@@ -483,7 +475,7 @@ class CURLRequest extends OutgoingRequest
                 }
 
                 if (isset($matches[2])) {
-                    $this->response->setStatusCode((int) $matches[2], $matches[3] ?? null);
+                    $this->response->setStatusCode($matches[2], $matches[3] ?? null);
                 }
             }
         }
@@ -492,9 +484,9 @@ class CURLRequest extends OutgoingRequest
     /**
      * Set CURL options
      *
-     * @return array
-     *
      * @throws InvalidArgumentException
+     *
+     * @return array
      */
     protected function setCURLOptions(array $curlOptions = [], array $config = [])
     {
@@ -628,8 +620,6 @@ class CURLRequest extends OutgoingRequest
                 $curlOptions[CURLOPT_HTTP_VERSION] = CURL_HTTP_VERSION_1_0;
             } elseif ($config['version'] === 1.1) {
                 $curlOptions[CURLOPT_HTTP_VERSION] = CURL_HTTP_VERSION_1_1;
-            } elseif ($config['version'] === 2.0) {
-                $curlOptions[CURLOPT_HTTP_VERSION] = CURL_HTTP_VERSION_2_0;
             }
         }
 

@@ -21,7 +21,7 @@ use Closure;
  * add a number of additional methods to customize how the routes are defined.
  *
  * The RouteCollection provides the Router with the routes so that it can determine
- * which controller should be run.
+ * which controller should be ran.
  */
 interface RouteCollectionInterface
 {
@@ -131,7 +131,7 @@ interface RouteCollectionInterface
     /**
      * Returns the current value of the translateURIDashes setting.
      *
-     * @return bool
+     * @return mixed
      */
     public function shouldTranslateURIDashes();
 
@@ -145,7 +145,7 @@ interface RouteCollectionInterface
     /**
      * Returns the raw array of available routes.
      *
-     * @return array
+     * @return mixed
      */
     public function getRoutes();
 
@@ -157,7 +157,7 @@ interface RouteCollectionInterface
     public function getHTTPVerb();
 
     /**
-     * Attempts to look up a route based on its destination.
+     * Attempts to look up a route based on it's destination.
      *
      * If a route exists:
      *
@@ -169,10 +169,9 @@ interface RouteCollectionInterface
      *      // Equals 'path/$param1/$param2'
      *      reverseRoute('Controller::method', $param1, $param2);
      *
-     * @param string     $search    Named route or Controller::method
-     * @param int|string ...$params
+     * @param array ...$params
      *
-     * @return false|string The route (URI path relative to baseURL) or false if not found.
+     * @return false|string
      */
     public function reverseRoute(string $search, ...$params);
 
@@ -185,9 +184,4 @@ interface RouteCollectionInterface
      * Grabs the HTTP status code from a redirecting Route.
      */
     public function getRedirectCode(string $from): int;
-
-    /**
-     * Get the flag that limit or not the routes with {locale} placeholder to App::$supportedLocales
-     */
-    public function shouldUseSupportedLocalesOnly(): bool;
 }
